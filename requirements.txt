@@ -1,0 +1,13 @@
+# MANIPULAÇÃO DE DADOS
+pandas
+pyspark == 4.0.1 # versão mais atual compativel com windows
+numpy
+
+# BANCO DE DADOS
+sqlalchemy
+psycopg2
+
+# VISUALIZAÇÃO DE DADOS
+ipykernel
+matplotlib
+seaborn
