@@ -4,14 +4,14 @@ services:
     container_name: us-realestate-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${PORT}:${PORT}"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-us_realestate}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       TZ: ${TZ:-UTC}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - us_realestate:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  us_realestate:
