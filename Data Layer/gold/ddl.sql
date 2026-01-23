@@ -1,0 +1,54 @@
+CREATE TABLE IF NOT EXISTS dw.Dim_Rdc (
+    SRK_rdc INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    hse_sze REAL,
+    bat INTEGER,
+    bed INTEGER,
+    rms INTEGER,
+    prc_per_sqf DOUBLE PRECISION
+);
+
+CREATE TABLE IF NOT EXISTS dw.Dim_Lnd_Lot (
+    SRK_lot INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    acre_lot REAL,
+    prc_per_acr DOUBLE PRECISION,
+    tpe TEXT
+);
+
+CREATE TABLE IF NOT EXISTS dw.Dim_Add (
+    SRK_add INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    ste TEXT,
+    cty TEXT,
+    srt REAL,
+    zip_cde TEXT
+);
+
+CREATE TABLE IF NOT EXISTS dw.Dim_Dte (
+    SRK_dte INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    prv_sld_dte DATE,
+    mon TEXT,
+    qtr INTEGER,
+    yer INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS dw.Fat_Rel_Est (
+    SRK_rel_est INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    prc REAL,
+    sta TEXT,
+    brk_by REAL,
+    SRK_rdc INTEGER,
+    SRK_lot INTEGER,
+    SRK_add INTEGER,
+    SRK_dte INTEGER,
+    FOREIGN KEY (SRK_rdc) REFERENCES dw.Dim_Rdc(SRK_rdc)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    FOREIGN KEY (SRK_lot) REFERENCES dw.Dim_Lnd_Lot(SRK_lot)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    FOREIGN KEY (SRK_add) REFERENCES dw.Dim_Add(SRK_add)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    FOREIGN KEY (SRK_dte) REFERENCES dw.Dim_Dte(SRK_dte)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
