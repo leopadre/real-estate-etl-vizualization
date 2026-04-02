@@ -2,6 +2,11 @@
 
 Projeto completo de engenharia e análise de dados utilizando dados do mercado imobiliário dos Estados Unidos. Este projeto cobre todo o pipeline de dados — desde ingestão até visualização — aplicando boas práticas como arquitetura Medalhão e modelagem em Star Schema.
 
+![mapa geral](assets/mapageral.png)
+![imoveis](assets/imoveis.png)
+![lotes](assets/lotes.png)
+![vendas](assets/venda.png)
+
 ---
 
 ## Objetivo
