@@ -1,104 +1,75 @@
--- Para o Mapa de Ofertas (FOR SALE)
+-- Geral
 
-SELECT dim.ste, COUNT(*) FROM dw.Fat_Rel_Est fat 
+SELECT 
+    dim.ste, 
+    COUNT(*), 
+    COUNT(*) FILTER (WHERE SRK_rdc IS NOT NULL) AS residences,
+    COUNT(*) FILTER (WHERE SRK_lot IS NOT NULL) AS lots
+FROM dw.Fat_Rel_Est fat 
 JOIN dw.Dim_Add dim ON fat.SRK_add = dim.SRK_add 
-WHERE fat.sta = 'for_sale'
-GROUP BY dim.ste;
+GROUP BY dim.ste
 
--- Informações Totais que Ficaram ao Lado do Mapa
-WITH cte_for_sale AS (
-    SELECT * FROM dw.Fat_Rel_Est WHERE sta = 'for_sale'
-)
-SELECT COUNT(*) FROM cte_for_sale;
-SELECT COUNT(*) FROM cte_for_sale WHERE SRK_rdc IS NOT NULL;
-SELECT COUNT(*) FROM cte_for_sale WHERE SRK_lot IS NOT NULL;
+SELECT
+    dim.ste,
+    COUNT(CASE WHEN fat.sta = 'for_sale' THEN 1 END) AS for_sale,
+    COUNT(CASE WHEN fat.sta = 'sold' THEN 1 END)     AS sold
+FROM dw.Fat_Rel_Est fat
+JOIN dw.Dim_Add dim ON fat.SRK_add = dim.SRK_add 
+GROUP BY dim.ste
 
-SELECT sta, COUNT(*) FROM dw.Fat_Rel_Est GROUP BY sta;
+-- Residencias
 
--- Residence
--- Do Estado Selecionado no Power BI
 WITH cte_residences AS (
-    SELECT fat.prc, add.cty, add.zip_cde, rdc.hse_sze, rdc.prc_per_sqf
+    SELECT
+        fat.prc, fat.sta, fat.brk_by,
+        add.ste, add.cty,
+        rdc.hse_sze, rdc.bed, rdc.bat, rdc.rms, rdc.prc_per_sqf
     FROM dw.Fat_Rel_Est fat
     JOIN dw.Dim_Add add ON fat.SRK_add = add.SRK_add
     JOIN dw.Dim_Rdc rdc ON fat.SRK_rdc = rdc.SRK_rdc
-    WHERE add.ste = 'estado_selecionado' AND fat.sta = 'for_sale'
 )
-SELECT COUNT(*) FROM cte_residences;
-SELECT cty, COUNT(*) FROM cte_residences GROUP BY cty;
-SELECT cty, AVG(hse_sze) FROM cte_residences GROUP BY cty;
-SELECT cty, AVG(prc_per_sqf) FROM cte_residences GROUP BY cty;
-
--- Da Cidade Selecionada no Power BI
-SELECT * FROM cte_residences WHERE cty = 'cidade_selecionada';
+SELECT * FROM cte_residences
+SELECT ste, cty, COUNT(sta) 
+FROM cte_residences 
+WHERE sta = 'for_sale' GROUP BY ste, cty;
 
 -- Lotes
--- Do Estado Selecionado no Power BI
-WITH cte_land_lots AS (
-    SELECT fat.prc, add.cty, add.zip_cde, lot.acre_lot, lot.prc_per_acr, lot.tpe
+
+WITH cte_lnd_lot AS (
+    SELECT
+        fat.prc, fat.sta, fat.brk_by,
+        lot.acr_lot, lot.prc_per_acr, lot.tpe,
+		add.ste, add.cty
     FROM dw.Fat_Rel_Est fat
     JOIN dw.Dim_Add add ON fat.SRK_add = add.SRK_add
     JOIN dw.Dim_Lnd_Lot lot ON fat.SRK_lot = lot.SRK_lot
-    WHERE add.ste = 'estados_selecionado' AND fat.sta = 'for_sale'
 )
-SELECT COUNT(*) FROM cte_land_lots;
-SELECT tpe, COUNT(*) FROM cte_land_lots GROUP BY tpe;
+SELECT * FROM cte_lnd_lot;
+SELECT ste, cty, COUNT(sta) 
+FROM cte_lnd_lot 
+WHERE sta = 'for_sale' GROUP BY ste, cty;
 
-SELECT cty, COUNT(*) FROM cte_land_lots GROUP BY cty;
-SELECT cty, AVG(acre_lot) FROM cte_land_lots GROUP BY cty;
-SELECT cty, AVG(prc_per_acr) FROM cte_land_lots GROUP BY cty;
+-- Vendas
 
--- Da Cidade Selecionada no Power BI
-SELECT tpe, COUNT(*) FROM cte_land_lots WHERE cty = 'cidade_selecionada' GROUP BY tpe;
-SELECT * FROM cte_land_lots WHERE cty = 'cidade_selecionada';
-
--- Para as Propriedades Vendidade (SOLD)
-
-SELECT dim.ste, COUNT(*) FROM dw.Fat_Rel_Est fat 
-JOIN dw.Dim_Add dim ON fat.SRK_add = dim.SRK_add 
-WHERE fat.sta = 'sold'
-GROUP BY dim.ste;
-
-WITH cte_sold AS (
-    SELECT * FROM dw.Fat_Rel_Est WHERE sta = 'sold'
-)
-SELECT COUNT(*) FROM cte_sold;
-
-SELECT COUNT(*) FROM cte_sold WHERE SRK_rdc IS NOT NULL;
-SELECT COUNT(*) FROM cte_sold WHERE SRK_lot IS NOT NULL;
-
--- Residence
--- Do estado selecionado no BI
-WITH cte_residences_sold AS (
-    SELECT fat.prc, add.cty, add.zip_cde, rdc.hse_sze, rdc.prc_per_sqf
+WITH cte_sales AS (
+    SELECT
+        fat.prc, fat.brk_by,
+        add.ste, add.cty,
+        dte.mon, dte.qtr, dte.yer, dte.prv_sld_dte,
+        CASE
+            WHEN fat.SRK_lot IS NULL THEN 'residence'
+            ELSE 'lot'
+        END AS tipo
     FROM dw.Fat_Rel_Est fat
     JOIN dw.Dim_Add add ON fat.SRK_add = add.SRK_add
-    JOIN dw.Dim_Rdc rdc ON fat.SRK_rdc = rdc.SRK_rdc
-    WHERE add.ste = 'estado_selecionado' AND fat.sta = 'sold'
+    JOIN dw.Dim_Dte dte ON fat.SRK_dte = dte.SRK_dte
+    WHERE fat.sta = 'sold'
 )
-SELECT COUNT(*) FROM cte_residences_sold;
+SELECT * FROM cte_sales;
 
-SELECT cty, COUNT(*) FROM cte_residences_sold GROUP BY cty;
-SELECT cty, AVG(hse_sze) FROM cte_residences_sold GROUP BY cty;
-SELECT cty, AVG(prc_per_sqf) FROM cte_residences_sold GROUP BY cty;
 
-SELECT * FROM cte_residences_sold WHERE cty = 'cidade_selecionada';
-
--- Land Lot
--- Do estado selecionado no BI
-WITH cte_land_lots_sold AS (
-    SELECT fat.prc, add.cty, add.zip_cde, lot.acre_lot, lot.prc_per_acr, lot.tpe
-    FROM dw.Fat_Rel_Est fat
-    JOIN dw.Dim_Add add ON fat.SRK_add = add.SRK_add
-    JOIN dw.Dim_Lnd_Lot lot ON fat.SRK_lot = lot.SRK_lot
-    WHERE add.ste = 'estado_selecionado' AND fat.sta = 'sold'
-)
-SELECT COUNT(*) FROM cte_land_lots_sold;
-
-SELECT tpe, COUNT(*) FROM cte_land_lots_sold GROUP BY tpe;
-SELECT cty, COUNT(*) FROM cte_land_lots_sold GROUP BY cty;
-SELECT cty, AVG(acre_lot) FROM cte_land_lots_sold GROUP BY cty;
-SELECT cty, AVG(prc_per_acr) FROM cte_land_lots_sold GROUP BY cty;
-
-SELECT tpe, COUNT(*) FROM cte_land_lots_sold WHERE cty = 'cidade_selecionada' GROUP BY tpe;
-SELECT * FROM cte_land_lots_sold WHERE cty = 'cidade_selecionada';
+SELECT dim.ste, dim.cty, COUNT(fat.sta) 
+FROM dw.Fat_Rel_Est fat 
+JOIN dw.Dim_Add dim ON fat.srk_add = dim.srk_add
+WHERE fat.sta = 'sold' AND fat.srk_rdc IS NOT NULL
+GROUP BY dim.ste, dim.cty;
